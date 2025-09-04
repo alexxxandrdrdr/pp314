@@ -89,7 +89,7 @@ public class AdminController {
         return roleService.findAll();
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/delete-user/{id}")
     @ResponseBody
     public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);

@@ -1,4 +1,4 @@
-package com.example.demo.component;
+package com.example.demo.mapper;
 
 import com.example.demo.model.Role;
 import com.example.demo.repository.RoleRepository;
