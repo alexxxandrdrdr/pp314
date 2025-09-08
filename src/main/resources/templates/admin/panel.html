@@ -167,7 +167,7 @@
                         </div>
 
                         <!-- Модалка редактирования -->
-                        <div class="modal fade" id="editUserModal" tabindex="-1">
+                        <div class="modal fade" id="editUserModal"  aria-hidden="true" tabindex="-1">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
@@ -212,9 +212,10 @@
                                         </button>
                                     </div>
                                 </div>
-                            </div>
 
+                            </div>
                         </div>
+
                         <!-- Модалка удаления -->
                         <div class="modal fade" id="deleteUserModal" tabindex="-1">
                             <div class="modal-dialog">
@@ -248,8 +249,6 @@
                                                     <!-- Роли будут заполнены динамически через JavaScript -->
                                                 </select>
                                             </div>
-
-
                                         </div>
                                         <!-- Футер -->
                                         <div class="modal-footer">
@@ -257,20 +256,19 @@
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                                 Отмена
                                             </button>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
-                        </div>
-
+                        </div> <!-- удаление пользователя  -->
                     </div>
-
                 </div>
             </div>
         </div>
 
 
         <!-- Форма добавления пользователя -->
-        <div class="tab-pane fade" id="newuser-content" role="tabpanel" aria-labelledby="newuser-tab">
+        <div class="tab-pane fade" id="newuser-content" role="tabpanel"  aria-hidden="true" aria-labelledby="newuser-tab">
             <div class="card">
                 <div class="card-header">Add new user</div>
                 <div class="card-body">
@@ -298,170 +296,194 @@
                 </div>
             </div>
         </div>
+        <!-- ======== Контент для User ======== -->
+        <div class="tab-pane fade"
+             th:classappend="${activeRole == 'ROLE_USER'} ? 'show active'"
+             id="content-user"
+             role="tabpanel"
+             aria-labelledby="tab-user">
 
-    </div>
+            <div class="container mt-4">
+                <h1 class="mb-4">User information page</h1>
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title mb-3">About user</h2>
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Имя пользователя</th>
+                                <th>Роли</th>
 
-
-    <!-- ======== Контент для User ======== -->
-    <div class="tab-pane fade"
-         th:classappend="${activeRole == 'ROLE_USER'} ? 'show active'"
-         id="content-user"
-         role="tabpanel"
-         aria-labelledby="tab-user">
-
-        <div class="container mt-4">
-            <h1 class="mb-4">User information page</h1>
-            <div class="card">
-                <div class="card-body">
-                    <h2 class="card-title mb-3">About user</h2>
-                    <table class="table table-bordered">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Имя пользователя</th>
-                            <th>Роли</th>
-
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr class="table-light">
-                            <td th:text="${authUser.id}"></td>
-                            <td th:text="${authUser.username}"></td>
-                            <td>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr class="table-light">
+                                <td th:text="${authUser.id}"></td>
+                                <td th:text="${authUser.username}"></td>
+                                <td>
                 <span th:each="role : ${authUser.roles}"
                       class="badge bg-secondary me-1"
                       th:text="${role.name}"></span>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Подключение Bootstrap Icons -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- Подключение Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script> /** редактирование пользователя */
-    document.addEventListener("DOMContentLoaded", function () {
-        // Загрузка списка ролей
-        fetch('/admin/roles')
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP error! Status: ${res.status}`);
-                }
-                return res.json();
-            })
-            .then(roles => {
-                const rolesSelect = document.getElementById("edit-roles");
-                rolesSelect.innerHTML = '';
-                roles.forEach(role => {
-                    const option = document.createElement('option');
-                    option.value = role.id;
-                    option.textContent = role.name;
-                    rolesSelect.appendChild(option);
+        <!-- Подключение Bootstrap -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script> /** редактирование пользователя */
+        document.addEventListener("DOMContentLoaded", function () {
+            // Обработка кнопок Отмена и крестика
+            document.querySelectorAll('#editUserModal [data-bs-dismiss="modal"]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const modalElement = document.getElementById("editUserModal");
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                        modalElement.addEventListener('hidden.bs.modal', function () {
+                            document.querySelector('body').focus(); // Переместить фокус
+                            console.log('Модальное окно editUserModal закрыто');
+                        }, { once: true });
+                    }
                 });
-            })
-            .catch(error => console.error('Error fetching roles:', error));
-
-        // Обработка клика по кнопке редактирования
-        document.querySelectorAll(".btn.btn-primary[data-bs-toggle='modal']").forEach(btn => {
-            btn.addEventListener("click", function () {
-                const userId = this.getAttribute("data-id");
-
-                // Проверка, что userId существует
-                if (!userId) {
-                    console.error('User ID is missing or invalid');
-                    alert('Идентификатор пользователя отсутствует. Попробуйте снова.');
-                    return;
-                }
-
-                // Запрос данных пользователя
-                fetch(`/admin/edit-user/${userId}`)
-                    .then(res => {
-                        if (!res.ok) {
-                            throw new Error(`HTTP error! Status: ${res.status}`);
-                        }
-                        return res.json();
-                    })
-                    .then(user => {
-                        // Проверка, что данные пользователя содержат id
-                        if (!user || !user.id) {
-                            throw new Error('Invalid user data: ID is missing');
-                        }
-
-                        // Заполнение полей формы
-                        document.getElementById("edit-id").value = user.id || '';
-                        document.getElementById("edit-username").value = user.username || '';
-
-                        // Заполнение ролей
-                        const rolesSelect = document.getElementById("edit-roles");
-                        Array.from(rolesSelect.options).forEach(opt => {
-                            opt.selected = user.roleIds && user.roleIds.includes(parseInt(opt.value));
-                        });
-
-                        // Открытие модального окна
-                        const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
-                        modal.show();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching user data:', error);
-                        alert('Не удалось загрузить данные пользователя. Попробуйте снова.');
-                    });
             });
-        });
-
-        // Обработка отправки формы
-        document.getElementById("editUserForm").addEventListener("submit", function (event) {
-            event.preventDefault();
-
-            const formData = new FormData(this);
-            const userId = formData.get("id");
-
-            // Проверка, что userId существует и является числом
-            if (!userId || isNaN(parseInt(userId))) {
-                console.error('Invalid or missing user ID in form data');
-                alert('Идентификатор пользователя отсутствует или некорректен. Попробуйте снова.');
-                return;
-            }
-
-            const data = {
-                id: parseInt(userId),
-                username: formData.get("username"),
-                password: formData.get("password") || null, // Пароль может быть пустым
-                roles: Array.from(formData.getAll("roles")).map(Number)
-            };
-
-            // Отправка данных на сервер
-            fetch(`/admin/edit-user/${userId}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            })
+        document.addEventListener("DOMContentLoaded", function () {
+            // Загрузка списка ролей
+            fetch('/admin/roles')
                 .then(res => {
                     if (!res.ok) {
                         throw new Error(`HTTP error! Status: ${res.status}`);
                     }
                     return res.json();
                 })
-                .then(response => {
-                    console.log("Ответ сервера:", response);
-                    bootstrap.Modal.getInstance(document.getElementById("editUserModal")).hide();
-                    window.location.href = "/admin";
+                .then(roles => {
+                    const rolesSelect = document.getElementById("edit-roles");
+                    rolesSelect.innerHTML = '';
+                    roles.forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.id;
+                        option.textContent = role.name;
+                        rolesSelect.appendChild(option);
+                    });
                 })
-                .catch(error => {
-                    console.error('Error updating user:', error);
-                    alert('Не удалось обновить пользователя. Попробуйте снова.');
+                .catch(error => console.error('Error fetching roles:', error));
+
+            // Обработка клика по кнопке редактирования
+            document.querySelectorAll(".btn.btn-primary[data-bs-toggle='modal']").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const userId = this.getAttribute("data-id");
+
+                    // Проверка, что userId существует
+                    if (!userId) {
+                        console.error('User ID is missing or invalid');
+                        alert('Идентификатор пользователя отсутствует. Попробуйте снова.');
+                        return;
+                    }
+
+                    // Запрос данных пользователя
+                    fetch(`/admin/edit-user/${userId}`)
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! Status: ${res.status}`);
+                            }
+                            return res.json();
+                        })
+                        .then(user => {
+                            // Проверка, что данные пользователя содержат id
+                            if (!user || !user.id) {
+                                throw new Error('Invalid user data: ID is missing');
+                            }
+
+                            // Заполнение полей формы
+                            document.getElementById("edit-id").value = user.id || '';
+                            document.getElementById("edit-username").value = user.username || '';
+
+                            // Заполнение ролей
+                            const rolesSelect = document.getElementById("edit-roles");
+                            Array.from(rolesSelect.options).forEach(opt => {
+                                opt.selected = user.roleIds && user.roleIds.includes(parseInt(opt.value));
+                            });
+
+                            // Открытие модального окна
+                            const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
+                            modal.show();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching user data:', error);
+                            alert('Не удалось загрузить данные пользователя. Попробуйте снова.');
+                        });
                 });
+            });
+
+            // Обработка отправки формы
+            document.getElementById("editUserForm").addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                const formData = new FormData(this);
+                const userId = formData.get("id");
+
+                // Проверка, что userId существует и является числом
+                if (!userId || isNaN(parseInt(userId))) {
+                    console.error('Invalid or missing user ID in form data');
+                    alert('Идентификатор пользователя отсутствует или некорректен. Попробуйте снова.');
+                    return;
+                }
+
+                const data = {
+                    id: parseInt(userId),
+                    username: formData.get("username"),
+                    password: formData.get("password") || null, // Пароль может быть пустым
+                    roles: Array.from(formData.getAll("roles")).map(Number)
+                };
+
+                // Отправка данных на сервер
+                fetch(`/admin/edit-user/${userId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! Status: ${res.status}`);
+                        }
+                        return res.json();
+                    })
+                    .then(response => {
+                        console.log("Ответ сервера:", response);
+                        bootstrap.Modal.getInstance(document.getElementById("editUserModal")).hide();
+                        window.location.href = "/admin";
+                    })
+                    .catch(error => {
+                        console.error('Error updating user:', error);
+                        alert('Не удалось обновить пользователя. Попробуйте снова.');
+                    });
+            });
         });
-    });
-    </script>
-    <script>/** удаление пользователя */
+        </script>
+        <script>/** удаление пользователя */
+        document.addEventListener("DOMContentLoaded", function () {
+            // Обработка кнопок Отмена и крестика
+            document.querySelectorAll('#editUserModal [data-bs-dismiss="modal"]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const modalElement = document.getElementById("editUserModal");
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                        modalElement.addEventListener('hidden.bs.modal', function () {
+                            document.querySelector('body').focus(); // Переместить фокус
+                            console.log('Модальное окно editUserModal закрыто');
+                        }, { once: true });
+                    }
+                });
+            });
         document.addEventListener("DOMContentLoaded", function () {
             // Функция для загрузки данных пользователя
             async function loadUserData(userId) {
@@ -535,6 +557,6 @@
                 console.error("Форма deleteUserForm не найдена");
             }
         });
-    </script>
+        </script>
 </body>
 </html>
