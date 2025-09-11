@@ -27,7 +27,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public String rolesToString(Collection<? extends GrantedAuthority> authorities)  {
+    public String rolesToString(Collection<? extends GrantedAuthority> authorities) {
         return authorities.stream()
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .sorted()
