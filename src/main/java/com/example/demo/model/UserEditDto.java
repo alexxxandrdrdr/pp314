@@ -1,7 +1,6 @@
 package com.example.demo.model;
 
 
-
 import java.util.List;
 
 public class UserEditDto {
@@ -13,7 +12,7 @@ public class UserEditDto {
     private String password;
     private List<Long> roles;
 
-    public UserEditDto(Long id, String firstname,String lastname, byte age, String email, String password, List<Long> roles) {
+    public UserEditDto(Long id, String firstname, String lastname, byte age, String email, String password, List<Long> roles) {
         this.id = id;
         this.firstname = firstname;
         this.lastname = lastname;

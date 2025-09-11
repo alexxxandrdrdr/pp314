@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 
-
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -26,7 +25,8 @@ public class AdminController {
         this.roleService = roleService;
     }
 
-    private record UserResponse(Long id, String firstname, String lastname, Byte age, String email, List<Long> roleIds) {
+    private record UserResponse(Long id, String firstname, String lastname, Byte age, String email,
+                                List<Long> roleIds) {
         static UserResponse fromUser(User user) {
             return new UserResponse(
                     user.getId(),

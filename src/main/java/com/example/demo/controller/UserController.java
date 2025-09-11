@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class UserController {
     private final RoleService roleService;
 
-    public UserController(RoleService roleService){
+    public UserController(RoleService roleService) {
         this.roleService = roleService;
     }
 
