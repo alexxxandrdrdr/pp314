@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-import static com.example.demo.service.RoleService.rolesToString;
 
 
 @Controller
@@ -27,9 +26,22 @@ public class AdminController {
         this.roleService = roleService;
     }
 
+    private record UserResponse(Long id, String firstname, String lastname, Byte age, String email, List<Long> roleIds) {
+        static UserResponse fromUser(User user) {
+            return new UserResponse(
+                    user.getId(),
+                    user.getFirstname(),
+                    user.getLastname(),
+                    user.getAge(),
+                    user.getEmail(),
+                    user.getRoles().stream().map(Role::getId).toList()
+            );
+        }
+    }
+
     @GetMapping
     public String showAdminPanel(Model model, @AuthenticationPrincipal User user) {
-        String roles = rolesToString(user.getRoles());
+        String roles = roleService.rolesToString(user.getRoles());
         model.addAttribute("authRoles", roles);
         model.addAttribute("authUser", user);
         model.addAttribute("roles", roleService.findAll());
@@ -40,48 +52,33 @@ public class AdminController {
 
     @PostMapping("/addUser")
     public String createUser(@ModelAttribute("user") User user) {
-        userService.save(user);
+        userService.saveUser(user);
         return "redirect:/admin";
     }
 
-    @GetMapping("/edit-user/{id}")
+    @GetMapping({"/edit-user/{id}", "/user-info/{id}"})
     @ResponseBody
-    public Map<String, Object> getUserForEdit(@PathVariable Long id) {
-        User user = userService.findById(id);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("user", user);
-        response.put("id", user.getId());
-        response.put("username", user.getUsername());
-        response.put("roleIds", user.getRoles().stream()
-                .map(Role::getId)
-                .toList());
-
-        return response;
+    public ResponseEntity<?> getUserData(@PathVariable Long id) {
+        try {
+            User user = userService.findById(id);
+            return ResponseEntity.ok(UserResponse.fromUser(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
     }
+
 
     @PatchMapping("/edit-user/{id}")
     @ResponseBody
     public Map<String, String> updateUser(@PathVariable Long id, @RequestBody UserEditDto userEditDto) {
-        if (userEditDto!= null && id != null) {
-            userService.updateUser(userEditDto,id);
-        } else throw new IllegalArgumentException("Изменений нет");
+        try {
+            userService.updateUser(userEditDto, id);
+        } catch (Exception e) {
+            return Map.of("status", "failed");
+        }
         return Map.of("status", "success");
     }
 
-    @GetMapping("/user-info/{id}")
-    @ResponseBody
-    public Map<String, Object> getUserInfo(@PathVariable Long id) {
-        User user = userService.findById(id);
-        Map<String, Object> response = new HashMap<>();
-
-        response.put("id", user.getId());
-        response.put("username", user.getUsername());
-        response.put("roleNames", user.getRoles().stream()
-                .map(Role::getName)
-                .toList());
-        return response;
-    }
 
     @GetMapping("/roles")
     @ResponseBody
@@ -93,6 +90,6 @@ public class AdminController {
     @ResponseBody
     public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
-        return  ResponseEntity.ok("User deleted successfully");
+        return ResponseEntity.ok("User deleted successfully");
     }
 }

@@ -1,65 +1,20 @@
 package com.example.demo.service;
 
-
-
-import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.model.UserEditDto;
-import com.example.demo.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-@Service
-public class UserService {
-    private final UserRepository userRepository;
-    private final RoleService roleService;
-    private final PasswordEncoder passwordEncoder;
-    public UserService(UserRepository userRepository, RoleService roleService, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.roleService = roleService;
-        this.passwordEncoder = passwordEncoder;
-    }
 
-    public List<User> findAll() {
-        return userRepository.findAll();
-    }
-    public void save(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-    }
+public interface UserService {
+    List<User> findAll();
 
-    public User findById(Long id) throws IllegalArgumentException{
-        return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Пользователь с id=" + id + " не найден"));
-    }
+    void saveUser(User user);
 
-    public void updateUser(UserEditDto userEditDto, Long id) {
-        if (!id.equals(userEditDto.getId())) {
-            throw new IllegalArgumentException("ID в пути не совпадает с ID пользователя");
-        }
-        User user = findById(id);
-        if (user == null) {
-            throw new IllegalArgumentException("Пользователь с ID " + id + " не найден");
-        }
-        user.setUsername(userEditDto.getUsername());
+    User findById(Long id) throws EntityNotFoundException;
 
-        if (userEditDto.getPassword() != null && !userEditDto.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userEditDto.getPassword()));
-        }
-        Set<Role> roles = userEditDto.getRoles().stream()
-                .map(roleService::findById)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        user.setRoles(roles);
+    void updateUser(UserEditDto userEditDto, Long id);
 
-        userRepository.save(user);
-    }
-
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
-    }
+    void deleteUser(Long id);
 }

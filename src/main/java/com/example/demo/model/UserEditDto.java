@@ -6,13 +6,19 @@ import java.util.List;
 
 public class UserEditDto {
     private Long id;
-    private String username;
+    private String firstname;
+    private String lastname;
+    private String email;
+    private byte age;
     private String password;
     private List<Long> roles;
 
-    public UserEditDto(Long id, String username, String password, List<Long> roles) {
+    public UserEditDto(Long id, String firstname,String lastname, byte age, String email, String password, List<Long> roles) {
         this.id = id;
-        this.username = username;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.age = age;
+        this.email = email;
         this.password = password;
         this.roles = roles;
     }
@@ -25,12 +31,36 @@ public class UserEditDto {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public String getFirstName() {
+        return firstname;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstname = firstName;
+    }
+
+    public String getLastName() {
+        return lastname;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastname = lastName;
+    }
+
+    public byte getAge() {
+        return age;
+    }
+
+    public void setAge(byte age) {
+        this.age = age;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {
@@ -41,7 +71,7 @@ public class UserEditDto {
         this.password = password;
     }
 
-    public List<Long> getRoles() {
+    public List<Long> getRolesIds() {
         return roles;
     }
 
