@@ -68,7 +68,7 @@
            href="#content-user"
            role="tab"
            aria-controls="content-user"
-           th:aria-selected="${activeRole == 'ROLE_USER'}"
+           th:aria-selected="true"
         >User</a>
     </div>
 
@@ -95,7 +95,6 @@
                                 <th>Возраст</th>
                                 <th>Email</th>
                                 <th>Роли</th>
-                                <th>Действия</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -106,14 +105,8 @@
                                 <td th:text="${authUser.age}"></td>
                                 <td th:text="${authUser.email}"></td>
                                 <td>
-                                        <span th:each="role : ${authUser.roles}"
-                                              class="badge bg-secondary me-1"
-                                              th:text="${role.name}"></span>
-                                </td>
-                                <td>
-                <span th:each="role : ${authUser.roles}"
-                      class="badge bg-secondary me-1"
-                      th:text="${role.name}"></span>
+                                        <span th:each="role : ${roles}"
+                                              th:text="${role}"></span>
                                 </td>
                             </tr>
                             </tbody>

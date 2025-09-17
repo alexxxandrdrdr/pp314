@@ -5,6 +5,8 @@ import com.example.demo.model.User;
 import com.example.demo.model.UserEditDto;
 import com.example.demo.service.RoleService;
 import com.example.demo.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -12,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Controller
@@ -19,6 +22,7 @@ import java.util.*;
 public class AdminController {
     private final UserService userService;
     private final RoleService roleService;
+    private final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     public AdminController(UserService userService, RoleService roleService) {
         this.userService = userService;
@@ -41,19 +45,21 @@ public class AdminController {
 
     @GetMapping
     public String showAdminPanel(Model model, @AuthenticationPrincipal User user) {
-        String roles = roleService.rolesToString(user.getRoles());
-        model.addAttribute("authRoles", roles);
-        model.addAttribute("authUser", user);
-        model.addAttribute("roles", roleService.findAll());
-        model.addAttribute("usersList", userService.findAll());
         return "admin/panel";
     }
 
-
     @PostMapping("/addUser")
-    public String createUser(@ModelAttribute("user") User user) {
-        userService.saveUser(user);
-        return "redirect:/admin";
+    @ResponseBody
+    public ResponseEntity<String> createUser(@RequestBody UserEditDto userDto) {
+        logger.info("Received create user request: {}", userDto);
+        try {
+            userService.saveUserFromDto(userDto);
+            logger.info("User created successfully: {}", userDto.getEmail());
+            return ResponseEntity.ok("User created successfully");
+        } catch (Exception e) {
+            logger.error("Failed to create user: {}", e.getMessage(), e);
+            return ResponseEntity.status(400).body("Failed to create user: " + e.getMessage());
+        }
     }
 
     @GetMapping({"/edit-user/{id}", "/user-info/{id}"})
@@ -85,6 +91,21 @@ public class AdminController {
     public List<Role> getAllRoles() {
         return roleService.findAll();
     }
+
+    @GetMapping("/users")
+    @ResponseBody
+    public List<UserResponse> getAllUsers() {
+        return userService.findAll().stream()
+                .map(UserResponse::fromUser)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/api/current-user")
+    @ResponseBody
+    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(UserResponse.fromUser(user));
+    }
+
 
     @DeleteMapping("/delete-user/{id}")
     @ResponseBody

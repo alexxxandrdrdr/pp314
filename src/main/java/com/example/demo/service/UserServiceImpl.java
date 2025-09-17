@@ -71,4 +71,20 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
+
+    @Override
+    public void saveUserFromDto(UserEditDto userEditDto) {
+        User user = new User();
+        user.setFirstname(userEditDto.getFirstName());
+        user.setLastname(userEditDto.getLastName());
+        user.setAge(userEditDto.getAge());
+        user.setEmail(userEditDto.getEmail());
+        user.setPassword(passwordEncoder.encode(userEditDto.getPassword()));
+        Set<Role> roles = userEditDto.getRolesIds().stream()
+                .map(roleService::findById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        user.setRoles(roles);
+        userRepository.save(user);
+    }
 }

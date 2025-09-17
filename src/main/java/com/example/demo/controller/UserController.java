@@ -21,6 +21,7 @@ public class UserController {
     @GetMapping
     public String showUserPage(Model model, @AuthenticationPrincipal User user) {
         String roles = roleService.rolesToString(user.getRoles());
+        model.addAttribute("activeRole", "ROLE_USER");
         model.addAttribute("authUser", user);
         model.addAttribute("roles", roles);
         return "user/user";
