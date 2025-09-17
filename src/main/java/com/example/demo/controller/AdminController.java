@@ -44,7 +44,7 @@ public class AdminController {
     }
 
     @GetMapping
-    public String showAdminPanel(Model model, @AuthenticationPrincipal User user) {
+    public String showAdminPanel() {
         return "admin/panel";
     }
 
