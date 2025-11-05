@@ -299,7 +299,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
 <script>
+
     // универсальная функция проверки email
     function validateEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -348,8 +350,11 @@
         async function loadRoles() {
             if (rolesCache) return rolesCache;
             try {
-                const response = await fetch('/admin/roles');
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const response = await fetch('/admin/api/roles', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
                 rolesCache = await response.json();
                 console.log("Роли загружены:", rolesCache);
                 return rolesCache;
@@ -376,7 +381,9 @@
                             const option = document.createElement('option');
                             option.value = role.id;
                             option.text = role.name.slice(5);
+
                             if (selectedRoleIds.includes(parseInt(role.id))) option.selected = true;
+                            console.log('выбраны роли: ', selectedRoleIds)
                             select.appendChild(option);
                         });
                     }
@@ -387,18 +394,26 @@
         // Загрузка текущего пользователя
         async function loadCurrentUser() {
             try {
-                const response = await fetch(`/admin/api/current-user`);
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const response = await fetch(`/admin/api/current-user`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
                 currentUser = await response.json();
                 document.getElementById('username').textContent = currentUser.email || 'User';
+
                 await loadRoles();
-                const roleNames = currentUser.roleIds ? currentUser.roleIds.map(id => {
-                    const role = rolesCache.find(r => r.id === id);
-                    return role ? role.name.slice(5) : '';
-                }).filter(name => name).join(', ') : '';
+                const roleNames = currentUser.roles
+                    ? currentUser.roles
+                        .map(role => role.name.startsWith('ROLE_') ? role.name.slice(5) : role.name)
+                        .filter(name => name)
+                        .join(', ')
+                    : '';
                 document.getElementById('user-roles').textContent = `with roles: ${roleNames}`;
                 updateUserPanel();
-                updateSidebar(); // Активация вкладки
+                updateSidebar();
+                console.log('currentUser.roles:', currentUser.roles);
+                console.log('rolesCache:', rolesCache);// Активация вкладки
             } catch (error) {
                 console.error('Ошибка загрузки текущего пользователя:', error);
                 alert('Не удалось загрузить данные пользователя');
@@ -421,9 +436,11 @@
             [adminContent, userContent].forEach(content => content.classList.remove('show', 'active'));
 
             // Проверка ролей
-            const hasAdminRole = currentUser.roleIds.some(id => rolesCache.some(r => r.id === id && r.name === 'ROLE_ADMIN'));
-            const hasUserRole = currentUser.roleIds.some(id => rolesCache.some(r => r.id === id && r.name === 'ROLE_USER'));
-
+            //const hasAdminRole = currentUser.roles.some(id => rolesCache.some(r => r.id === id && r.name === 'ROLE_ADMIN'));
+            //const hasUserRole = currentUser.roles.some(id => rolesCache.some(r => r.id === id && r.name === 'ROLE_USER'));
+// Проверка наличия ролей напрямую по имени
+            const hasAdminRole = currentUser.roles.some(role => role.name === 'ROLE_ADMIN');
+            const hasUserRole = currentUser.roles.some(role => role.name === 'ROLE_USER');
             // Активация вкладки по приоритету: ROLE_ADMIN > ROLE_USER
             if (hasAdminRole) {
                 adminTab.classList.add('active', 'text-white', 'bg-primary');
@@ -438,6 +455,8 @@
                 userContent.classList.add('show', 'active');
                 console.log('Активирована вкладка "User" по умолчанию');
             }
+            console.log('currentUser.roles:', currentUser.roles);
+            console.log('rolesCache:', rolesCache);
         }
 
         // Обработчик переключения вкладок
@@ -474,17 +493,20 @@
         // Загрузка списка пользователей
         async function loadUsers() {
             try {
-                const response = await fetch('/admin/users');
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const response = await fetch('/admin/api/users', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
                 const users = await response.json();
                 const tbody = document.getElementById('users-table-body');
                 tbody.innerHTML = '';
                 await loadRoles();
                 users.forEach(user => {
-                    const roleBadges = user.roleIds ? user.roleIds.map(id => {
-                        const role = rolesCache.find(r => r.id === id);
-                        return role ? `<span>${role.name.slice(5)}</span>` : '';
-                    }).join(' ') : '';
+                    const roleBadges = user.roles ? user.roles.map(role => role.name.startsWith('ROLE_') ? role.name.slice(5) : role.name)
+                            .filter(name => name)
+                            .join(', ')
+                        : '';
                     const row = document.createElement('tr');
                     row.innerHTML = `
                     <td>${user.id}</td>
@@ -514,10 +536,10 @@
             if (!currentUser) return;
             const tbody = document.getElementById('user-info-body');
             tbody.innerHTML = '';
-            const roleBadges = currentUser.roleIds ? currentUser.roleIds.map(id => {
-                const role = rolesCache.find(r => r.id === id);
-                return role ? `<span>${role.name.slice(5)}</span>` : '';
-            }).join(' ') : '';
+            const roleBadges = currentUser.roles ? currentUser.roles.map(role => role.name.startsWith('ROLE_') ? role.name.slice(5) : role.name)
+                    .filter(name => name)
+                    .join(', ')
+                : '';
             const row = document.createElement('tr');
             row.classList.add('table-light');
             row.innerHTML = `
@@ -534,16 +556,17 @@
         // Загрузка данных пользователя для модалки
         async function loadUserForModal(userId, isEdit = true) {
             try {
-                const response = await fetch(`/admin/user-info/${userId}`);
+                const response = await fetch(`/admin/api/user-info/${userId}`);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                const user = await response.json();
+                const userDTO = await response.json();
                 const prefix = isEdit ? 'edit' : 'delete';
-                document.getElementById(`${prefix}-id`).value = user.id || '';
-                document.getElementById(`${prefix}-firstname`).value = user.firstname || '';
-                document.getElementById(`${prefix}-lastname`).value = user.lastname || '';
-                document.getElementById(`${prefix}-age`).value = user.age || '';
-                document.getElementById(`${prefix}-email`).value = user.email || '';
-                populateRolesSelect(`${prefix}-roles`, user.roleIds || []);
+                console.log('получен пользователь: ', userDTO.lastname, userDTO.roles)
+                document.getElementById(`${prefix}-id`).value = userDTO.id || '';
+                document.getElementById(`${prefix}-firstname`).value = userDTO.firstname || '';
+                document.getElementById(`${prefix}-lastname`).value = userDTO.lastname || '';
+                document.getElementById(`${prefix}-age`).value = userDTO.age || '';
+                document.getElementById(`${prefix}-email`).value = userDTO.email || '';
+                populateRolesSelect(`${prefix}-roles`, userDTO.roles || []);
                 const modalId = isEdit ? 'editUserModal' : 'deleteUserModal';
                 new bootstrap.Modal(document.getElementById(modalId)).show();
             } catch (error) {
@@ -555,7 +578,7 @@
         // Удаление пользователя
         async function deleteUser(userId) {
             try {
-                const response = await fetch(`/admin/delete-user/${userId}`, {
+                const response = await fetch(`/admin/api/delete-user/${userId}`, {
                     method: 'DELETE',
                     headers: {'Content-Type': 'application/json'}
                 });
@@ -583,21 +606,23 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const userId = formData.get('id');
-            const data = {
-                id: parseInt(userId),
-                firstname: formData.get('firstname'),
-                lastname: formData.get('lastname'),
-                age: parseInt(formData.get('age')) || null,
-                email: formData.get('email'),
-                password: formData.get('password') || null,
-                roles: Array.from(formData.getAll('roles')).map(Number)
-            };
+            const userData = new URLSearchParams();
+            userData.append("id", parseInt(userId));
+            userData.append("firstname", formData.get('firstname'));
+            userData.append("lastname", formData.get('lastname'));
+            userData.append("age", parseInt(formData.get('age')) || null);
+            userData.append("email", formData.get('email'));
+            userData.append("password", formData.get('password')|| null);
+            formData.getAll('roles').forEach(role => userData.append('roles', role));
+
             try {
                 if (checkEmailInput('edit-email') === true) {
-                    const response = await fetch(`/admin/edit-user/${userId}`, {
+                    const response = await fetch(`/admin/api/edit-user/${userId}`, {
                         method: 'PATCH',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(data)
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: userData.toString()
                     });
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                     bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
@@ -624,7 +649,7 @@
             };
             try {
                 if (checkEmailInput('new-email') === true) {
-                    const response = await fetch('/admin/addUser', {
+                    const response = await fetch('/admin/api/addUser', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(data)
@@ -648,12 +673,14 @@
             if (userId) deleteUser(userId);
         });
 
-        // Инициализация
+// Инициализация
         populateRolesSelect('edit-roles');
         populateRolesSelect('new-roles');
         populateRolesSelect('delete-userRoles');
         loadCurrentUser();
         loadUsers();
+
+
     });
 </script>
 </body>

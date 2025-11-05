@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.mapper.UserMapper;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.model.UserEditDto;
@@ -10,11 +11,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 
 @Controller
@@ -23,94 +23,63 @@ public class AdminController {
     private final UserService userService;
     private final RoleService roleService;
     private final Logger logger = LoggerFactory.getLogger(AdminController.class);
+    private final UserMapper userMapper;
 
-    public AdminController(UserService userService, RoleService roleService) {
+    public AdminController(UserService userService, RoleService roleService, UserMapper userMapper) {
         this.userService = userService;
         this.roleService = roleService;
-    }
-
-    private record UserResponse(Long id, String firstname, String lastname, Byte age, String email,
-                                List<Long> roleIds) {
-        static UserResponse fromUser(User user) {
-            return new UserResponse(
-                    user.getId(),
-                    user.getFirstname(),
-                    user.getLastname(),
-                    user.getAge(),
-                    user.getEmail(),
-                    user.getRoles().stream().map(Role::getId).toList()
-            );
-        }
+        this.userMapper = userMapper;
     }
 
     @GetMapping
     public String showAdminPanel() {
-        return "admin/panel";
+        return "admin/pages/panel";
     }
 
-    @PostMapping("/addUser")
     @ResponseBody
-    public ResponseEntity<String> createUser(@RequestBody UserEditDto userDto) {
-        logger.info("Received create user request: {}", userDto);
-        try {
-            userService.saveUserFromDto(userDto);
-            logger.info("User created successfully: {}", userDto.getEmail());
-            return ResponseEntity.ok("User created successfully");
-        } catch (Exception e) {
-            logger.error("Failed to create user: {}", e.getMessage(), e);
-            return ResponseEntity.status(400).body("Failed to create user: " + e.getMessage());
-        }
+    @PostMapping(value = "/api/addUser")
+    public ResponseEntity<?> createUser(@RequestBody UserEditDto userDto) {
+        userService.saveUserFromDto(userDto);
+        logger.info("User created successfully: {}", userDto.getEmail());
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping({"/edit-user/{id}", "/user-info/{id}"})
     @ResponseBody
-    public ResponseEntity<?> getUserData(@PathVariable Long id) {
-        try {
-            User user = userService.findById(id);
-            return ResponseEntity.ok(UserResponse.fromUser(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
-        }
+    @GetMapping(value = {"/api/user-info/{id}"})
+    public UserEditDto getUserData(@PathVariable Long id) {
+        return userMapper.mapUserToUserEditDto(userService.findById(id));
     }
 
-
-    @PatchMapping("/edit-user/{id}")
     @ResponseBody
-    public Map<String, String> updateUser(@PathVariable Long id, @RequestBody UserEditDto userEditDto) {
-        try {
-            userService.updateUser(userEditDto, id);
-        } catch (Exception e) {
-            return Map.of("status", "failed");
-        }
-        return Map.of("status", "success");
+    @PatchMapping(value = "/api/edit-user/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestParam String firstname, @RequestParam String lastname, @RequestParam byte age, @RequestParam String email, @RequestParam String password,@RequestParam List<Long> roles) {
+        logger.info("Received update user request: {}", email);
+        userService.updateUser(id, firstname, lastname, age, email, password, roles);
+        return ResponseEntity.ok().build();
+
     }
 
-
-    @GetMapping("/roles")
     @ResponseBody
+    @GetMapping(value = "/api/roles")
     public List<Role> getAllRoles() {
         return roleService.findAll();
     }
-
-    @GetMapping("/users")
     @ResponseBody
-    public List<UserResponse> getAllUsers() {
-        return userService.findAll().stream()
-                .map(UserResponse::fromUser)
-                .collect(Collectors.toList());
+    @GetMapping(value = "/api/users")
+    public List<User> getAllUsers() {
+        return userService.findAll();
     }
 
-    @GetMapping("/api/current-user")
     @ResponseBody
-    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(UserResponse.fromUser(user));
+    @GetMapping(value = "/api/current-user")
+    public User getCurrentUser(@AuthenticationPrincipal User user) {
+        return userService.findById(user.getId()).orElse(null);
     }
 
-
-    @DeleteMapping("/delete-user/{id}")
     @ResponseBody
-    public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) {
+    @DeleteMapping("/api/delete-user/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.ok("User deleted successfully");
+        return ResponseEntity.ok().build();
     }
 }

@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class UserEditDto {
     private Long id;
@@ -21,6 +22,16 @@ public class UserEditDto {
         this.password = password;
         this.roles = roles;
     }
+    public UserEditDto(User user) {
+        this.id = user.getId();
+        this.firstname = user.getFirstname();
+        this.lastname = user.getLastname();
+        this.email = user.getEmail();
+        this.age = user.getAge();
+        this.password = user.getPassword();
+        this.roles = user.getRoles().stream().map(Role::getId).collect(Collectors.toList());
+    }
+    public UserEditDto() {}
 
     public Long getId() {
         return id;
@@ -34,20 +45,20 @@ public class UserEditDto {
         return email;
     }
 
-    public String getFirstName() {
+    public String getFirstname() {
         return firstname;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstname = firstName;
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
     }
 
-    public String getLastName() {
+    public String getLastname() {
         return lastname;
     }
 
-    public void setLastName(String lastName) {
-        this.lastname = lastName;
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 
     public byte getAge() {
@@ -70,7 +81,7 @@ public class UserEditDto {
         this.password = password;
     }
 
-    public List<Long> getRolesIds() {
+    public List<Long> getRoles() {
         return roles;
     }
 
