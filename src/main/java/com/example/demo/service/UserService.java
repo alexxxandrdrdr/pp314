@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.model.User;
-import com.example.demo.model.UserEditDto;
+import com.example.demo.dto.UserEditDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,11 +10,9 @@ import java.util.Optional;
 public interface UserService {
     List<User> findAll();
 
-    void saveUser(User user);
-
     Optional<User> findById(Long id);
 
-    void updateUser(UserEditDto userEditDto, Long id);
+    UserEditDto getUserEditDtoById(Long id);
 
     void updateUser(Long id, String firstname, String lastname, byte age, String email, String password, List<Long> roles);
 

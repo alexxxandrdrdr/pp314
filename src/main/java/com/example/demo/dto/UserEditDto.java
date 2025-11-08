@@ -1,8 +1,6 @@
-package com.example.demo.model;
-
+package com.example.demo.dto;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class UserEditDto {
     private Long id;
@@ -13,24 +11,6 @@ public class UserEditDto {
     private String password;
     private List<Long> roles;
 
-    public UserEditDto(Long id, String firstname, String lastname, byte age, String email, String password, List<Long> roles) {
-        this.id = id;
-        this.firstname = firstname;
-        this.lastname = lastname;
-        this.age = age;
-        this.email = email;
-        this.password = password;
-        this.roles = roles;
-    }
-    public UserEditDto(User user) {
-        this.id = user.getId();
-        this.firstname = user.getFirstname();
-        this.lastname = user.getLastname();
-        this.email = user.getEmail();
-        this.age = user.getAge();
-        this.password = user.getPassword();
-        this.roles = user.getRoles().stream().map(Role::getId).collect(Collectors.toList());
-    }
     public UserEditDto() {}
 
     public Long getId() {

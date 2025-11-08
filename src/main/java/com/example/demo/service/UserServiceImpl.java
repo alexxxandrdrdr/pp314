@@ -2,11 +2,9 @@ package com.example.demo.service;
 
 
 import com.example.demo.mapper.UserMapper;
-import com.example.demo.model.Role;
 import com.example.demo.model.User;
-import com.example.demo.model.UserEditDto;
+import com.example.demo.dto.UserEditDto;
 import com.example.demo.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -15,9 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,46 +35,14 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
-    @Transactional
-    public void saveUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-    }
-    @Transactional
-    public void saveUser(UserEditDto userDto) {
-        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        User user = userMapper.mapDtoToUser(userDto);
-        userRepository.save(user);
-    }
 
     public Optional<User> findById(Long id){
         return userRepository.findById(id);
     }
-    @Transactional
-    public void updateUser(UserEditDto userEditDto, Long id) {
-        if (userEditDto.getId() != null && id != null) {
-            try {
-                User user = findById(id).orElseThrow(EntityNotFoundException::new);
-                user.setFirstname(userEditDto.getFirstname());
-                user.setLastname(userEditDto.getLastname());
-                user.setAge(userEditDto.getAge());
-                user.setEmail(userEditDto.getEmail());
 
-                if (userEditDto.getPassword() != null && !userEditDto.getPassword().isEmpty()) {
-                    user.setPassword(passwordEncoder.encode(userEditDto.getPassword()));
-                }
-                Set<Role> roles = userEditDto.getRoles().stream()
-                        .map(roleService::findById)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toSet());
-                user.setRoles(roles);
-
-                userRepository.save(user);
-            } catch (DataAccessException e) {
-                log.error(e.getMessage());
-            }
-        }
-
+    public UserEditDto getUserEditDtoById(Long id){
+        Optional<User> user = userRepository.findById(id);
+        return userMapper.mapUserToUserEditDto(user);
     }
 
     @Transactional
@@ -113,17 +77,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void saveUserFromDto(UserEditDto userEditDto) {
-        User user = new User();
-        user.setFirstname(userEditDto.getFirstname());
-        user.setLastname(userEditDto.getLastname());
-        user.setAge(userEditDto.getAge());
-        user.setEmail(userEditDto.getEmail());
-        user.setPassword(passwordEncoder.encode(userEditDto.getPassword()));
-        Set<Role> roles = userEditDto.getRoles().stream()
-                .map(roleService::findById)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        user.setRoles(roles);
-        userRepository.save(user);
+        userRepository.save(userMapper.mapDtoToUser(userEditDto));
     }
 }

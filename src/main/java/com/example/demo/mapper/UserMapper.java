@@ -2,8 +2,9 @@ package com.example.demo.mapper;
 
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
-import com.example.demo.model.UserEditDto;
+import com.example.demo.dto.UserEditDto;
 import com.example.demo.repository.RoleRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -13,9 +14,11 @@ import java.util.stream.Collectors;
 public class UserMapper {
 
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserMapper(RoleRepository roleRepository) {
+    public UserMapper(RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User mapDtoToUser (UserEditDto userEditDto) {
@@ -24,7 +27,7 @@ public class UserMapper {
         user.setFirstname(userEditDto.getFirstname());
         user.setLastname(userEditDto.getLastname());
         user.setEmail(userEditDto.getEmail());
-        user.setPassword(userEditDto.getPassword());
+        user.setPassword(passwordEncoder.encode(userEditDto.getPassword()));
         user.setAge(userEditDto.getAge());
         user.setRoles(userEditDto.getRoles().stream().map(roleRepository::findById).flatMap(Optional::stream).collect(Collectors.toSet()));
         return user;
