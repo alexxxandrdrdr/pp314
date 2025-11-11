@@ -46,7 +46,7 @@
         <span class="text-white fw-bold me-2" th:text="${authUser.username}"></span>
         <span class="text-white" th:text="'with roles: ' + ${roles}"></span>
     </div>
-    <form th:action="@{/logout}" method="post" class="mb-0">
+    <form id="logout-form" action="/logout" method="post" class="mb-0">
         <button class="border-0 bg-transparent text-white-50 p-0" style="cursor:pointer;">Logout</button>
     </form>
 </nav>

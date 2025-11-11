@@ -9,6 +9,7 @@ import java.util.Set;
 @Table(name = "role")
 public class Role implements GrantedAuthority {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
     @Transient
