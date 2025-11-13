@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -26,14 +27,13 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<String> showUserPage(Model model, @AuthenticationPrincipal User user) {
-Context context = new Context();
-        context.setVariable("authUser",user);
-        context.setVariable("roles", roleService.findAll());
-        context.setVariable("activeRole", "ROLE_USER");
-        String html =templateEngine.process("user/user",context);
-
-        return ResponseEntity.ok(html);
+    public ModelAndView showUserPage(Model model, @AuthenticationPrincipal User user) {
+        ModelAndView mav = new ModelAndView();
+        mav.addObject("authUser", user);
+        mav.addObject("roles", user.getRoles());
+        mav.addObject("activeRole", "ROLE_USER");
+        mav.setViewName("user/user");
+        return mav;
 
     }
 }

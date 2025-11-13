@@ -5,11 +5,15 @@ import com.example.demo.model.User;
 import com.example.demo.dto.UserEditDto;
 import com.example.demo.service.RoleService;
 import com.example.demo.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.View;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -31,10 +35,10 @@ public class AdminController {
     }
 
     @GetMapping
-    public ResponseEntity<String> showAdminPanel() {
-        Context context = new Context();
-        String html = templateEngine.process("admin/pages/panel",context);
-        return ResponseEntity.ok(html);
+    public ModelAndView showAdminPanel() {
+        ModelAndView mav = new ModelAndView();
+        mav.setViewName("admin/pages/panel");
+        return mav;
     }
 
     @PostMapping(value = "/api/addUser")
