@@ -28,9 +28,11 @@ public class AdminController {
     }
 
     @GetMapping
-    public ModelAndView showAdminPanel() {
+    public ModelAndView showAdminPanel(@AuthenticationPrincipal User currentUser) {
         ModelAndView mav = new ModelAndView();
-        mav.setViewName("admin/pages/panel");
+        mav.addObject("currentUser", currentUser);
+        mav.addObject("roles", roleService.findAll());
+        mav.setViewName("panel");
         return mav;
     }
 
@@ -62,11 +64,6 @@ public class AdminController {
     @GetMapping(value = "api/users")
     public List<User> getAllUsers() {
         return userService.findAll();
-    }
-
-    @GetMapping(value = "api/current-user")
-    public User getCurrentUser(@AuthenticationPrincipal User user) {
-        return user;
     }
 
     @DeleteMapping("api/delete-user/{id}")
