@@ -7,18 +7,23 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+
 import java.io.IOException;
 import java.util.Collection;
 
 @Component
 public class CustomSuccessHandler implements AuthenticationSuccessHandler {
+
+    public CustomSuccessHandler() {
+    }
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         Collection<? extends GrantedAuthority> roles = authentication.getAuthorities();
         if ((roles.stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getAuthority())))) {
-            response.sendRedirect("/admin");
+            response.sendRedirect("/adm-panel.html");
         } else if ((roles.stream().anyMatch(r -> "ROLE_USER".equals(r.getAuthority())))) {
-            response.sendRedirect("/user");
+            response.sendRedirect("/user-panel.html");
         }
     }
 }

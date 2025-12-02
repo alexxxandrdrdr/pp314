@@ -8,15 +8,14 @@ import com.example.demo.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
+
 
 import java.util.*;
 
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admin/api")
 public class AdminController {
     private final UserService userService;
     private final RoleService roleService;
@@ -27,48 +26,40 @@ public class AdminController {
         this.roleService = roleService;
     }
 
-    @GetMapping
-    public ModelAndView showAdminPanel(@AuthenticationPrincipal User currentUser) {
-        ModelAndView mav = new ModelAndView();
-        mav.addObject("currentUser", currentUser);
-        mav.addObject("roles", roleService.findAll());
-        mav.setViewName("panel");
-        return mav;
-    }
-
-    @PostMapping(value = "/api/addUser")
+    @PostMapping(value = "/addUser")
     public ResponseEntity<?> createUser(@RequestBody UserEditDto userDto) {
         userService.saveUserFromDto(userDto);
         logger.info("User created successfully: {}", userDto.getEmail());
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = {"api/user-info/{id}"})
+    @GetMapping(value = {"/user-info/{id}"})
     public UserEditDto getUserData(@PathVariable Long id) {
         return userService.getUserEditDtoById(id);
     }
 
-    @PatchMapping(value = "api/edit-user/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestParam String firstname, @RequestParam String lastname, @RequestParam byte age, @RequestParam String email, @RequestParam String password,@RequestParam List<Long> roles) {
+    @PatchMapping(value = "/edit-user/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestParam String firstname, @RequestParam String lastname, @RequestParam byte age, @RequestParam String email, @RequestParam String password, @RequestParam List<Long> roles) {
         logger.info("Received update user request: {}", email);
         userService.updateUser(id, firstname, lastname, age, email, password, roles);
         return ResponseEntity.ok().build();
 
     }
 
-    @GetMapping(value = "api/roles")
+    @GetMapping(value = "/roles")
     public List<Role> getAllRoles() {
         return roleService.findAll();
     }
 
-    @GetMapping(value = "api/users")
+    @GetMapping(value = "/users")
     public List<User> getAllUsers() {
         return userService.findAll();
     }
 
-    @DeleteMapping("api/delete-user/{id}")
+    @DeleteMapping("/delete-user/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok().build();
     }
+
 }

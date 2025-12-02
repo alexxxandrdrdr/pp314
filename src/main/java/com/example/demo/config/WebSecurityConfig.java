@@ -25,16 +25,18 @@ public class WebSecurityConfig {
         return new CustomSuccessHandler();
     }
 
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CustomSuccessHandler css) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
+                .formLogin(login -> login
+                        .successHandler(css)
+                        .permitAll()
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
-                )
-                .formLogin(login -> login
-                        .successHandler(customSuccessHandler())
                 )
                 .logout(Customizer.withDefaults());
 

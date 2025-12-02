@@ -36,11 +36,11 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    public Optional<User> findById(Long id){
+    public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
 
-    public UserEditDto getUserEditDtoById(Long id){
+    public UserEditDto getUserEditDtoById(Long id) {
         Optional<User> user = userRepository.findById(id);
         return userMapper.mapUserToUserEditDto(user);
     }
@@ -48,8 +48,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void updateUser(Long id, String firstname, String lastname,
-                              byte age, String email, String password,
-                              List<Long> roles) {
+                           byte age, String email, String password,
+                           List<Long> roles) {
         User user = userRepository.findById(id).orElse(null);
         if (user != null) {
             try {
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
                 user.setLastname(lastname);
                 user.setAge(age);
                 user.setEmail(email);
-                if(password != null && !password.isEmpty()) {
+                if (password != null && !password.isEmpty()) {
                     user.setPassword(passwordEncoder.encode(password));
                 }
                 user.setRoles(roles.stream().map(roleService::findById).collect(Collectors.toSet()));
