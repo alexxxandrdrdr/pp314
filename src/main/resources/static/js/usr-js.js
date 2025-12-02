@@ -9,12 +9,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (currentUser !== null) {
         console.log("текущий пользователь получен ", currentUser.email)
     }
-    let rolesCache = null;
+    let rolesCache = ["ROLE_ADMIN","ROLE_USER"];
 
 // Загрузка текущего пользователя
     async function loadCurrentUser() {
         document.getElementById('username').textContent = currentUser.email || 'User';
-        await loadRoles();
+        //await loadRoles();
         const roleNames = currentUser.roles
             ? currentUser.roles
                 .map(role => role.name.startsWith('ROLE_') ? role.name.slice(5) : role.name)
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         updateSidebar();
         console.log('currentUser.roles:', currentUser.roles);
         console.log('rolesCache:', rolesCache);
-
+/*
         // Загрузка ролей
         async function loadRoles() {
             if (rolesCache != null) return rolesCache;
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 alert('Не удалось загрузить роли');
                 return [];
             }
-        }
+        }*/
     }
 
 

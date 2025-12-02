@@ -17,10 +17,7 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
 
-    private final RoleService roleService;
-
-    public UserController(RoleService roleService) {
-        this.roleService = roleService;
+    public UserController() {
     }
 
     @GetMapping(value = "/current-user")
@@ -28,9 +25,5 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
-    @GetMapping(value = "/roles")
-    public List<Role> getRoles(){
-        return roleService.findAll();
-    }
 }
 
